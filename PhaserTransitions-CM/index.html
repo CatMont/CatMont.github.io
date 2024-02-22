@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>title</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.js"></script>
+   
+<body>
+    <script>
+        // Create a new Phaser Game instance with a configuration object
+const config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    scene: {
+        // Initial scene
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
+
+const game = new Phaser.Game(config);
+
+// Preload function for loading assets
+function preload() {
+    // Load your assets here (images, spritesheets, etc.)
+    this.load.image('background', 'SU background.jpg');
+}
+
+// Create function for initializing game objects
+function create() {
+    this.cameras.main.fadeIn(1000, 0, 0, 0);
+    // Add a background sprite
+    const background = this.add.image(0, 0, 'background').setOrigin(0, 0);
+    background.scale = .5
+    //this.cameras.main.fadeIn(1000, 0, 0, 0);
+    // Set up a text object to display scene information
+    const text = this.add.text(400, 300, 'Scene 1 - Press Space to Transition', {
+        fontSize: '24px',
+        fill: '#fff'
+    });
+    text.setOrigin(0.5);
+
+    // Define a key for transitioning to the next scene
+    const spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    //this.cameras.main.fadeOut(1000, 0, 0, 0);
+    // Set up an event listener for the space key
+    this.input.keyboard.on('keydown-SPACE', function (event) {
+        // Transition to the next scene
+        this.scene.start('Scene2');
+       
+    },this);
+}
+
+// Update function for game logic
+function update() {
+  
+}
+
+//Define a second scene
+const Scene2 = {
+    preload: function () {
+        this.load.image('background1', 'Undertalebkgrd.jpg');
+
+    },
+    create: function () {
+        this.cameras.main.fadeIn(1000, 0, 0, 0);
+        // Additional setup for Scene2
+        const background = this.add.image(0, 0, 'background1').setOrigin(0, 0);
+        background.scale = .7;
+        const text = this.add.text(400, 300, 'Scene 2 - Press Space to Go to next scene', {
+            fontSize: '24px',
+            fill: '#fff'
+        });
+        text.setOrigin(0.5);
+
+        // Set up an event listener for the space key to go back to Scene1
+        this.input.keyboard.on('keydown-SPACE', function (event) {
+            this.scene.start('Scene3');
+        }, this);
+    },
+    update: function () {
+        // Additional updates for Scene2 if needed
+    }
+};
+
+//Define a second scene
+const Scene3 = {
+    preload: function () {
+        this.load.image('background2', 'mhabkgrd.jpg');
+    },
+    create: function () {
+        this.cameras.main.fadeIn(1000, 0, 0, 0);
+        // Additional setup for Scene2
+        const background = this.add.image(0, 0, 'background2').setOrigin(0, 0);
+        const text = this.add.text(400, 300, 'Scene 3 - Press Space to Go to the next scene', {
+            fontSize: '24px',
+            fill: '#fff'
+        });
+        text.setOrigin(0.5);
+
+        // Set up an event listener for the space key to go back to Scene1
+        this.input.keyboard.on('keydown-SPACE', function (event) {
+            this.cameras.main.fadeOut(1000, 0, 0, 0);
+            this.scene.start('Scene4');
+        }, this);
+    },
+    update: function () {
+        // Additional updates for Scene2 if needed
+    }
+};
+
+const Scene4 = {
+    preload: function () {
+        this.load.image('background3', 'NoragamiBkgrd.jpg');
+    },
+    create: function () {
+        this.cameras.main.fadeIn(1000, 0, 0, 0);
+        // Additional setup for Scene2
+        const background = this.add.image(0, 0, 'background3').setOrigin(0, 0);
+        const text = this.add.text(400, 300,  'Scene 4 - Press Space to Go to the next scene', {
+            fontSize: '24px',
+            fill: '#fff'
+        });
+        text.setOrigin(0.5);
+
+        // Set up an event listener for the space key to go back to Scene1
+        this.input.keyboard.on('keydown-SPACE', function (event) {
+            this.scene.start('Scene5');
+        }, this);
+    },
+    update: function () {
+        // Additional updates for Scene2 if needed
+    }
+};
+
+const Scene5 = {
+    preload: function () {
+        this.load.image('background4', 'Minecraftbkgrd.jpg');
+    },
+    create: function () {
+        this.cameras.main.fadeIn(1000, 0, 0, 0);
+        // Additional setup for Scene2
+        const background = this.add.image(0, 0, 'background4').setOrigin(0, 0);
+        const text = this.add.text(400, 300,  'Scene 5 - Press Space to Go back to scene 1', {
+            fontSize: '24px',
+            fill: '#fff'
+        });
+        text.setOrigin(0.5);
+
+        // Set up an event listener for the space key to go back to Scene1
+        this.input.keyboard.on('keydown-SPACE', function (event) {
+            this.scene.start('default');
+        }, this);
+    },
+    update: function () {
+        // Additional updates for Scene2 if needed
+    }
+};
+
+
+// Add both scenes to the game
+game.scene.add('default', config.scene);
+game.scene.add('Scene2', Scene2);
+game.scene.add('Scene3', Scene3);
+game.scene.add('Scene4', Scene4);
+game.scene.add('Scene5', Scene5);
+
+// Start the initial scene
+game.scene.start('default');
+    </script>
+
+</body>
+</html>

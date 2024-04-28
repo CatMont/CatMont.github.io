@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minesweeper</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f0f0f0;
+      background-image: url('space-sky.png');
+    }
+    #game-container {
+      width: 600px;
+      height: 600px; /* Adjust height to accommodate two grids */
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+<script>
+  const config = {
+    type: Phaser.AUTO,
+    width: 600,
+    height: 600, 
+    parent: 'game-container',
+    scene: {
+      preload: preload,
+      create: create
+    }
+  };
+
+  const game = new Phaser.Game(config);
+
+  function preload(){
+    this.load.image("Logo", "MinesweeperLogo.png");
+    this.load.image('Play', "play.png"); 
+  }
+
+  function create(){ 
+    
+    const title = this.add.image(300, 200, "Logo").setOrigin(0.5);
+      
+      const playButton = this.add.image(300, 300, 'Play').setOrigin(0.5); 
+      playButton.setInteractive();
+      playButton.on('pointerdown', () => {
+        
+        this.scene.start('Minesweeper');
+      });
+  }
+
+let tile_map = []; // Global variable to store tile map
+
+const Scene3 = {
+    preload: function () {
+        this.load.image('green-empty', 'gray-empty.png'); // Beginning tiles
+        this.load.image('brown-empty', 'empty-blue.png'); // Hidden Tiles
+        this.load.image('brown-mine', 'brown-mine.png'); // Bombs
+        this.load.image('green-flagged', 'green-flagged.png'); //flags
+        this.load.audio('soundKey', 'videogame-death-sound-43894.mp3'); //death sound
+        // Load brown tiles with numbers
+        for (let i = 1; i <= 8; i++) {
+        this.load.image('brown-' + i, 'blue-' + i + '.png'); //numbers
+        }
+    },
+    create: function () {
+        this.Soundffect = this.sound.add('soundKey');
+        let tileStates = []
+        const tileSize = 60; // Size of each tile
+        const gridWidth = 10; // Number of tiles in a row
+        const gridHeight = 10; // Number of tiles in a column
+
+        // Create green-empty grid
+        const greenTiles = []; // Store references to green tiles
+        for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
+                const x = i * tileSize + tileSize / 2;
+                const y = j * tileSize + tileSize / 2;
+                // Add green-empty tiles with higher depth
+                const tile = this.add.image(x, y, 'green-empty').setDepth(1);
+                tile.setScale(tileSize / tile.width, tileSize / tile.height); // Scale the tile to fit the tileSize
+                // Enable input for the tile
+                tile.setInteractive();
+                // Store reference to the tile
+                greenTiles.push(tile);
+                // Add click event
+                tileStates.push(false);
+                tile.on('pointerdown', function (pointer, localX, localY, event) {
+                    if (pointer.middleButtonDown()) { // Check if right mouse button is clicked
+                        if (tileStates[i * gridWidth + j]) { // If already flagged, remove the flag
+                        tile.setTexture('green-empty');
+                        tileStates[i * gridWidth + j] = false; // Update tile state
+                    } else { // If not flagged, add the flag
+                        tile.setTexture('green-flagged');
+                        tileStates[i * gridWidth + j] = true; // Update tile state
+                    }
+                    } else {
+                        // Perform flood-fill from clicked tile for left mouse button click
+                        floodFill(i, j, gridWidth, gridHeight, greenTiles, this.scene);
+                        // Count and log the number of visible tiles
+                        let visibleCount = 0;
+                        for (let tile of greenTiles) {
+                            if (tile.visible) {
+                                visibleCount++;
+                            }
+                        }
+                        if(visibleCount === 10){
+                            this.scene.start('YouWin'); 
+                        }
+                    }
+                })
+            }
+        }
+
+        // Create brown-empty grid with bombs and numbers
+        randomize_map();
+        for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
+                const x = i * tileSize + tileSize / 2;
+                const y = j * tileSize + tileSize / 2;
+                // Add brown-empty tiles and bombs with a lower depth
+                const tile = this.add.image(x, y, 'brown-empty').setDepth(0);
+                tile.setScale(tileSize / tile.width, tileSize / tile.height); // Scale the tile to fit the tileSize
+                // Check if this tile has a bomb
+                if (tile_map[i][j] === "B") {
+                    const bomb = this.add.image(x, y, 'brown-mine').setDepth(0);
+                    bomb.setScale(tileSize / bomb.width, tileSize / bomb.height); // Scale the bomb to fit the tileSize
+                } else if (tile_map[i][j] > 0) {
+                    // If there are adjacent bombs, display the corresponding number tile with lower depth
+                    const numberTile = this.add.image(x, y, 'brown-' + tile_map[i][j]).setDepth(0);
+                    numberTile.setScale(tileSize / numberTile.width, tileSize / numberTile.height);
+                }
+            }
+        }
+    },
+};
+
+const Restart = {
+    preload: function(){
+        this.load.image("You Lose", "YouLose.png");
+        this.load.image('exit', 'exit-button.png');
+        this.load.image('retry', 'orange-retry.png');
+
+    }, 
+    create: function(){
+        const title = this.add.image(300, 200, "You Lose").setOrigin(0.5);
+        let retry = this.add.image(300, 300, "retry").setOrigin(0.5);
+        retry.setInteractive();
+        retry.on('pointerdown', () => {
+            //this.scene.start('TileGameScene');
+            this.scene.start('Minesweeper');
+        });
+        let exit = this.add.image(300, 400, 'exit').setOrigin(0.5); 
+        exit.setInteractive(); 
+        exit.on('pointerdown', () => {
+            this.scene.start('default'); 
+        });
+    }
+}
+
+const Restart2 = {
+    preload: function(){
+        this.load.image("You Win", "YouWin.png");
+        this.load.image('exit', 'exit-button.png');
+        this.load.image('retry', 'orange-retry.png');
+        this.load.sound('win', 'game-start-6104.mp3');
+
+    }, 
+    create: function(){
+        this.Soundffect = this.sound.add('soundKey');
+        this.Soundffect.play(); 
+        const title = this.add.image(300, 200, "You Lose").setOrigin(0.5);
+        let retry = this.add.image(300, 300, "retry").setOrigin(0.5);
+        retry.setInteractive();
+        retry.on('pointerdown', () => {
+            //this.scene.start('TileGameScene');
+            this.scene.start('Minesweeper');
+        });
+        let exit = this.add.image(300, 400, 'exit').setOrigin(0.5); 
+        exit.setInteractive(); 
+        exit.on('pointerdown', () => {
+            this.scene.start('default'); 
+        });
+    }
+}
+function floodFill(x, y, rows, cols, greenTiles, scene) {
+    // Bounds check
+    if (x < 0 || x >= rows || y < 0 || y >= cols) {
+        return;
+    }
+
+    // Get the index of the tile in the 1D array
+    const index = x * cols + y;
+    
+    // Check if the current tile is not a green-empty tile
+    const currentTile = greenTiles[index];
+    if (!currentTile || currentTile.visible === false) {
+        return;
+    }
+
+    // Hide the current green-empty tile
+    currentTile.setVisible(false);
+
+    // Check if the current tile corresponds to a non-zero number in tile_map
+    if (tile_map[x][y] !== 0 && !isNaN(tile_map[x][y])) {
+        // Reveal the number tile
+         return; // Stop flood-fill in this direction
+    }
+
+    if (tile_map[x][y] == "B"){
+        scene.Soundffect.play();
+
+        currentTile.setVisible(false); 
+        setTimeout(function() {
+            gameOver(scene);
+        }, 2000);
+
+    }
+
+    // Recursive flood-fill in four directions
+    floodFill(x - 1, y, rows, cols, greenTiles); // Left
+    floodFill(x + 1, y, rows, cols, greenTiles); // Right
+    floodFill(x, y - 1, rows, cols, greenTiles); // Up
+    floodFill(x, y + 1, rows, cols, greenTiles); // Down
+
+}
+
+function gameOver(scene){
+    scene.scene.start('YouLose');
+    
+}
+
+
+
+
+
+// Example of randomize_map function implementation
+const rows = 10;
+const cols = 10;
+const mines = 10; // Number of bombs
+
+function randomize_map() {
+    tile_map = Array.from({ length: rows }, () => Array.from({ length: cols }, () => 0)); // Initialize the grid
+
+    // Place bombs randomly
+    for (let i = 0; i < mines; i++) {
+        let x = Phaser.Math.Between(0, rows - 1);
+        let y = Phaser.Math.Between(0, cols - 1);
+        while (tile_map[x][y] === "B") {
+            x = Phaser.Math.Between(0, rows - 1);
+            y = Phaser.Math.Between(0, cols - 1);
+        }
+        tile_map[x][y] = "B";
+    }
+
+    // Calculate numbers indicating adjacent bombs
+    for (let x = 0; x < rows; x++) {
+        for (let y = 0; y < cols; y++) {
+            if (tile_map[x][y] === 'B') {
+                // Tops, Bottoms, and Sides
+                // Places to the left of bomb
+                if (y - 1 > -1 && tile_map[x][y - 1] !== "B") {
+                    tile_map[x][y - 1]++;
+                }
+                // Places to the right of Bomb
+                if (y + 1 < cols && tile_map[x][y + 1] !== "B") {
+                    tile_map[x][y + 1]++;
+                }
+                // Places above bomb
+                if (x - 1 > -1 && tile_map[x - 1][y] !== "B") {
+                    tile_map[x - 1][y]++;
+                }
+                // Places below Bomb
+                if (x + 1 < rows && tile_map[x + 1][y] !== "B") {
+                    tile_map[x + 1][y]++;
+                }
+                // Diagonals
+                // Top left diagonal
+                if (y - 1 > -1 && x - 1 > -1 && tile_map[x - 1][y - 1] !== "B") {
+                    tile_map[x - 1][y - 1]++;
+                }
+                // Bottom right diagonal
+                if (y + 1 < cols && x + 1 < rows && tile_map[x + 1][y + 1] !== "B") {
+                    tile_map[x + 1][y + 1]++;
+                }
+                // Bottom left diagonal
+                if (y - 1 > -1 && x + 1 < rows && tile_map[x + 1][y - 1] !== "B") {
+                    tile_map[x + 1][y - 1]++;
+                }
+                // Top right diagonal
+                if (y + 1 < cols && x - 1 > -1 && tile_map[x - 1][y + 1] !== "B") {
+                    tile_map[x - 1][y + 1]++;
+                }
+            }
+        }
+    }
+    console.log(tile_map);
+}
+
+game.scene.add('default', config.scene);
+game.scene.add('Minesweeper', Scene3);
+game.scene.add('YouLose', Restart); 
+game.scene.add('YouWin', Restart2);
+game.scene.start('default');
+</script>
+
+</body>
+</html>

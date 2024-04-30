@@ -177,7 +177,7 @@ const Restart2 = {
     create: function(){
         this.Soundffect = this.sound.add('win');
         this.Soundffect.play(); 
-        const title = this.add.image(300, 200, "You Win").setOrigin(0.5);
+        const title = this.add.image(300, 100, "You Win").setOrigin(0.5);
         let retry = this.add.image(300, 300, "retry").setOrigin(0.5);
         retry.setInteractive();
         retry.on('pointerdown', () => {

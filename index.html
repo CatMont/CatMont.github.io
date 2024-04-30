@@ -112,8 +112,8 @@ const Scene3 = {
                                 visibleCount++;
                             }
                         }
-                        if(visibleCount === 10){
-                            this.scene.start('YouWin'); 
+                        if(visibleCount <= 10){
+                            win(); 
                         }
                     }
                 })
@@ -238,6 +238,10 @@ function gameOver(scene){
     
 }
 
+
+function win(){
+    game.scene.start('YouWin'); 
+}
 
 
 
